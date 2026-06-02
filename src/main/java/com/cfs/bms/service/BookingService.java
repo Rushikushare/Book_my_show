@@ -10,10 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.cfs.bms.dto.BookingDto;
 import com.cfs.bms.dto.BookingRequestDto;
 import com.cfs.bms.exception.SeatUnavailableException;
+import com.cfs.bms.model.Booking;
 import com.cfs.bms.model.Payment;
 import com.cfs.bms.model.Show;
 import com.cfs.bms.model.ShowSeat;
 import com.cfs.bms.model.User;
+import com.cfs.bms.repository.BookingRepository;
 import com.cfs.bms.repository.ShowRepository;
 import com.cfs.bms.repository.ShowSeatRepository;
 import com.cfs.bms.repository.UserRepository;
@@ -29,6 +31,9 @@ public class BookingService {
     @Autowired
     private ShowSeatRepository showSeatRepository;
 
+    @Autowired
+    private BookingRepository bookingRepository;
+
     public BookingDto BookingDto(BookingRequestDto bookingRequest) {
 
         User user = userRepository.findById(bookingRequest.getUserId())
@@ -39,8 +44,7 @@ public class BookingService {
 
     List<ShowSeat> selectedSeats=ShowSeatRepository.findAllById(bookingRequest.getSeatIds());
 
-    for(
-    ShowSeat seat:selectedSeats)
+    for(ShowSeat seat:selectedSeats)
     {
         if (!"AVAILABLE".equals(seat.getStatus())) {
             throw new SeatUnavailableException("Seat" + seat.getSeat().getSeatNumber() + "Not Available");
@@ -51,10 +55,11 @@ public class BookingService {
     showSeatRepository.saveAll(selectedSeats);
 
   Double  totalAmount=selectedSeats.stream()
-                 .mapToDouble(ShowSeat::getPrice)DoubleStream
+                 .mapToDouble(ShowSeat::getPrice)
                  .sum();
 
-
+      
+    //payment
     Payment payment= new Payment();
 
     payment.setAmount(totalAmount);
@@ -62,6 +67,44 @@ public class BookingService {
     payment.setPaymentMethod(bookingRequest.getPaymentMethod());
     payment.setStatus("SUCCESS");
     payment.setTransactionId(UUID.randomUUID().toString());
+    
 
+
+    //booking
+    Booking booking =new Booking();
+
+    booking.setUser(user);
+    booking.setShow(show);
+    booking.setBookingTime(LocalDateTime.now());
+    booking.setStatus("CONFIRMED");
+    booking.setTotalAmount(totalAmount);
+        booking.setBookingNumber(UUID.randomUUID().toString());
+
+    booking.setPayment(payment);
+
+    Booking saveBooking=bookingRepository.save(booking);
+
+
+    selectedSeats.forEach(seat->{
+        seat.setStatus("BOOKED");
+        seat.setBooking(saveBooking);
+    });
+
+
+     showSeatRepository.saveAll(selectedSeats);
+     return 
+
+
+
+
+    }
+
+    private BookingDto mapTOBookingDto(Booking booking, List<ShowSeat> seats) {
+
+        BookingDto bookingDto = new BookingDto();
+        bookingDto.setID(booking.getId());
+        bookingDto.setBookingNumber(booking.getBookingNumber());
+        bookingDto.setBookingTime(booking.getBookingTime());
+        bookingDto.setTotalAmount(booking.getTotalAmount());
     }
 }

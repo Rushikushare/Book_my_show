@@ -1,4 +1,4 @@
-package com.cfs.bms.reposotory;
+package com.cfs.bms.repository;
 
 import java.util.List;
 
