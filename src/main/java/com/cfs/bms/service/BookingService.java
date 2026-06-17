@@ -9,6 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.cfs.bms.dto.BookingDto;
 import com.cfs.bms.dto.BookingRequestDto;
+import com.cfs.bms.dto.MovieDto;
+import com.cfs.bms.dto.ScreenDto;
+import com.cfs.bms.dto.SeatDto;
+import com.cfs.bms.dto.ShowDto;
+import com.cfs.bms.dto.ShowSeatDto;
+import com.cfs.bms.dto.TheaterDto;
+import com.cfs.bms.dto.UserDto;
 import com.cfs.bms.exception.SeatUnavailableException;
 import com.cfs.bms.model.Booking;
 import com.cfs.bms.model.Payment;
@@ -106,5 +113,67 @@ public class BookingService {
         bookingDto.setBookingNumber(booking.getBookingNumber());
         bookingDto.setBookingTime(booking.getBookingTime());
         bookingDto.setTotalAmount(booking.getTotalAmount());
+
+        //
+        UserDto userDto = new UserDto();
+
+        userDto.setId(booking.getUser().getID());
+        userDto.setName(booking.getUser().getName());
+        userDto.setEmail(booking.getUser().getEmail());
+        userDto.setPhoneNumber(booking.getUser().getPhoneNumber());
+
+        bookingDto.setUser(userDto);
+
+        ShowDto showdto = new ShowDto();
+        showdto.setId(booking.getShow().getId());
+        showdto.setStartTime(booking.getShow().getStartTime());
+        showdto.setEndTime(booking.getShow().getEndTime());
+
+        MovieDto movieDto = new MovieDto();
+
+        movieDto.setId(booking.getShow().getMovie().getId());
+        movieDto.setTitle(booking.getShow().getMovie().getTitle());
+        movieDto.setDescription(booking.getShow().getMovie().getDescription());
+        movieDto.setLanguage(booking.getShow().getMovie().getLanguage());
+        movieDto.setGenre(booking.getShow().getMovie().getGenre());
+        movieDto.setDurationMins(booking.getShow().getMovie().getDurationMins());
+        movieDto.setReleaseDate(booking.getShow().getMovie().getReleaseDate());
+        movieDto.setPourl(booking.getShow().getMovie().getPosterUrl());
+        showdto.setMovie(movieDto);
+
+        ScreenDto screenDto = new ScreenDto();
+
+        screenDto.setId(booking.getShow().getScreen().getId());
+        screenDto.setname(booking.getShow().getScreen().getName());
+        screenDto.setTotalSeats(booking.getShow().getScreen().getTotalSeats());
+
+        TheaterDto theaterDto = new TheaterDto();
+        theaterDto.setId(booking.getShow().getScreen().getTheater().getID());
+        theaterDto.setName(booking.getShow().getScreen().getTheater().getName());
+        theaterDto.setAddress(booking.getShow().getScreen().getTheater().getAddress());
+        theaterDto.setCity(booking.getShow().getScreen().getTheater().getCity());
+        theaterDto.setTotalScreen(booking.getShow().getScreen().getTheater().getTotalScreen());
+
+        screenDto.setTheater(theaterDto);
+        showdto.setScreen(screenDto);
+        bookingDto.setShow(showdto);
+
+        seats.stream()
+                .map(seats->{
+                     ShowSeatDto seatdto= new ShowSeatDto();
+                     seatDto.setId(seat.getID());
+                      seatDto.setStatus(seat.getStatus());
+                      seatDto.setPrice(seat.getPrice());
+
+
+                      SeatDto baseseatDto=new SeatDto();
+                      baseseatDto.setId(seat.getSeat().getId());
+                       baseseatDto.setSeatNumber(seat.getSeat().getSeatNumber());
+                       baseseatDto.setSeatType(seat.getSeat().getSeatType());
+                       baseseatDto.setBasePrice(seat.getSeat().getBasePrice());
+                       
+                })
+        
+
     }
 }
