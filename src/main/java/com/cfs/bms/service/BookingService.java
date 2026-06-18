@@ -2,6 +2,7 @@ package com.cfs.bms.service;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
 import org.hibernate.mapping.List;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.cfs.bms.dto.BookingDto;
 import com.cfs.bms.dto.BookingRequestDto;
 import com.cfs.bms.dto.MovieDto;
+import com.cfs.bms.dto.PaymentDto;
 import com.cfs.bms.dto.ScreenDto;
 import com.cfs.bms.dto.SeatDto;
 import com.cfs.bms.dto.ShowDto;
@@ -27,6 +29,8 @@ import com.cfs.bms.repository.ShowRepository;
 import com.cfs.bms.repository.ShowSeatRepository;
 import com.cfs.bms.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
+
 public class BookingService {
 
     @Autowired
@@ -41,7 +45,8 @@ public class BookingService {
     @Autowired
     private BookingRepository bookingRepository;
 
-    public BookingDto BookingDto(BookingRequestDto bookingRequest) {
+    @Transactional
+    public BookingDto createBooking(BookingRequestDto bookingRequest) {
 
         User user = userRepository.findById(bookingRequest.getUserId())
                 .orElseThrow(() -> new RespurceNotFoundException("User Not Found"));
@@ -99,12 +104,14 @@ public class BookingService {
 
 
      showSeatRepository.saveAll(selectedSeats);
-     return 
+     return    mapTOBookingDto(saveBooking.selectedSeats);
 
 
 
 
     }
+
+    public BookingDto geBookingById()
 
     private BookingDto mapTOBookingDto(Booking booking, List<ShowSeat> seats) {
 
@@ -158,7 +165,7 @@ public class BookingService {
         showdto.setScreen(screenDto);
         bookingDto.setShow(showdto);
 
-        seats.stream()
+        List<ShowSeatDto> showseatdto=seats.stream()
                 .map(seats->{
                      ShowSeatDto seatdto= new ShowSeatDto();
                      seatDto.setId(seat.getID());
@@ -171,8 +178,27 @@ public class BookingService {
                        baseseatDto.setSeatNumber(seat.getSeat().getSeatNumber());
                        baseseatDto.setSeatType(seat.getSeat().getSeatType());
                        baseseatDto.setBasePrice(seat.getSeat().getBasePrice());
+
+                       return seatDto;
                        
-                })
+                })Stream<ShowSeatDto>.collect(Collectors.toList());
+
+                bookingDto.setSeats(showseatdto);
+
+
+                if(booking.getPayment()!=null){
+                       PaymentDto paymentDto=new PaymentDto();
+
+                       paymentDto.setId(booking.getPayment().getId());
+                       paymentDto.setAmount(booking.getPayment().getAmount());
+                       paymentDto.setPaymentMethod(booking.getPayment().getPaymentMethod());
+                       paymentDto.setPaymentTime(booking.getPayment().getPaymentTime());
+                       paymentDto.setStatus(booking.getPayment().getStatus());
+                       paymentDto.setTransactionId(booking.getPayment().getTransactionId());
+
+                       bookingDto.setPayment(paymentDto);
+   return bookingDto;
+                }
         
 
     }
