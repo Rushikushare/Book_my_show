@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
+import com.sun.tools.javac.util.List;
 
 import org.hibernate.mapping.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import com.cfs.bms.dto.ShowDto;
 import com.cfs.bms.dto.ShowSeatDto;
 import com.cfs.bms.dto.TheaterDto;
 import com.cfs.bms.dto.UserDto;
+import com.cfs.bms.exception.ResourceNotFoundException;
 import com.cfs.bms.exception.SeatUnavailableException;
 import com.cfs.bms.model.Booking;
 import com.cfs.bms.model.Payment;
@@ -111,7 +113,30 @@ public class BookingService {
 
     }
 
-    public BookingDto geBookingById()
+    public BookingDto geBookingById(Long id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
+
+        showSeatRepository.findAll()
+                .stream()
+                .filter(seat -> seat.getBooking() != null && seat.getBooking().getId().equals(booking.getId()));
+    }
+
+    public BookingDto getBookingByNumber(String bookingNumber){
+          
+           Booking booking =bookingRepository.findByBookingNumber(bookingNumber)
+                        .orElseThrow(()-> new ResourceNotFoundException("Booking Not Found"));
+
+              List<ShowSeat> seats= showSeatRepository.findAll()List<ShowSeat>
+                        .stream()
+                        .filter(seat-> seat.getBooking!=null && seat.getBooking.equals(booking.getId()))stream<ShowSeat>
+                        .collect(Collectors.toList());
+
+                    
+            
+
+
+    }
 
     private BookingDto mapTOBookingDto(Booking booking, List<ShowSeat> seats) {
 
